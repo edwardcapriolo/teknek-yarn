@@ -52,52 +52,32 @@ public class TeknekApplicationMaster {
     capability.setMemory(128);
     capability.setVirtualCores(1);
 
-    // Make container requests to ResourceManager
-    for (int i = 0; i < 1; ++i) {
-      ContainerRequest containerAsk = new ContainerRequest(capability, null, null, priority);
-      System.out.println("Making res-req " + i);
-      rmClient.addContainerRequest(containerAsk);
-    }
-
-    // Obtain allocated containers and launch
-    int allocatedContainers = 0;
-    while (allocatedContainers < 1) {
-      AllocateResponse response = rmClient.allocate(0);
-      for (Container container : response.getAllocatedContainers()) {
-        ++allocatedContainers;
-
-        // Launch container by create ContainerLaunchContext
-        ContainerLaunchContext ctx =
-            Records.newRecord(ContainerLaunchContext.class);
-        ctx.setCommands(
-            Collections.singletonList(
-                    "$JAVA_HOME/bin/java" +
-                            " -cp " + jarPath + 
-                            " " + TeknekDaemon.class.getName() +
-                //" 1>" + ApplicationConstants.LOG_DIR_EXPANSION_VAR + "/stdout" +
-                //" 2>" + ApplicationConstants.LOG_DIR_EXPANSION_VAR + "/stderr"
-                           " 1> /tmp/am-out 2> /tmp/am-err" 
-                ));
-        System.out.println("Launching container " + allocatedContainers);
-        nmClient.startContainer(container, ctx);
-      }
+    ContainerRequest containerAsk = new ContainerRequest(capability, null, null, priority);
+    rmClient.addContainerRequest(containerAsk);
+    AllocateResponse response = rmClient.allocate(0);
+    
+    
+    while(response.getAllocatedContainers().size()==0){
+      System.out.println("waiting for container");
+      response = rmClient.allocate(0);
       Thread.sleep(1000);
     }
-
-    // Now wait for containers to complete
-    int completedContainers = 0;
-    while (completedContainers < 1) {
-      AllocateResponse response = rmClient.allocate(completedContainers);
-      for (ContainerStatus status : response.getCompletedContainersStatuses()) {
-        ++completedContainers;
-        System.out.println("Completed container " + completedContainers);
-      }
-      Thread.sleep(100);
+    System.out.println("Have containers "+response.getAllocatedContainers().size());
+    
+    for (Container container : response.getAllocatedContainers()) {
+      ContainerLaunchContext ctx = Records.newRecord(ContainerLaunchContext.class);
+      ctx.setCommands(Collections.singletonList("$JAVA_HOME/bin/java" + " -cp " + jarPath + " "
+              + TeknekYarnStarter.class.getName() + " 1>"
+              + ApplicationConstants.LOG_DIR_EXPANSION_VAR + "/stdout" + " 2>"
+              + ApplicationConstants.LOG_DIR_EXPANSION_VAR + "/stderr"
+      // " 1> /tmp/am-out 2> /tmp/am-err"
+              ));
+      System.out.println(ctx.getCommands());
+      System.out.println(container); 
+      nmClient.startContainer(container, ctx);
     }
-
+     
     Thread.sleep(1000000);
-    // Un-register with ResourceManager
-    rmClient.unregisterApplicationMaster(
-        FinalApplicationStatus.SUCCEEDED, "", "");
+    rmClient.unregisterApplicationMaster(FinalApplicationStatus.SUCCEEDED, "", "");
   }
 }

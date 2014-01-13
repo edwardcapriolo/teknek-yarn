@@ -53,9 +53,9 @@ public class TeknekYarn {
     YarnClientApplication app = yarnClient.createApplication();
     ContainerLaunchContext amContainer = Records.newRecord(ContainerLaunchContext.class);
     amContainer.setCommands(Collections.singletonList("$JAVA_HOME/bin/java" + " -Xmx256M"
-            + " io.teknek.yarn.TeknekApplicationMaster" + " 1> /tmp/out-app 2>/tmp/err-app" 
-            //+ ApplicationConstants.LOG_DIR_EXPANSION_VAR + "/stdout" + " 2>"
-            //+ ApplicationConstants.LOG_DIR_EXPANSION_VAR + "/stderr"));
+            + " io.teknek.yarn.TeknekApplicationMaster 1> " 
+            + ApplicationConstants.LOG_DIR_EXPANSION_VAR + "/stdout" + " 2> "
+            + ApplicationConstants.LOG_DIR_EXPANSION_VAR + "/stderr"
             ));
 
     LocalResource appMasterJar = Records.newRecord(LocalResource.class);
@@ -87,12 +87,16 @@ public class TeknekYarn {
     while (appState != YarnApplicationState.FINISHED && appState != YarnApplicationState.KILLED
             && appState != YarnApplicationState.FAILED) {
       try {
-        Thread.sleep(100);
+        Thread.sleep(5000);
       } catch (InterruptedException e) {
         e.printStackTrace();
       }
       appReport = yarnClient.getApplicationReport(appId);
+      System.out.println(appReport.getApplicationType());
+      System.out.println(appReport.getDiagnostics());
+      System.out.println(appReport.getTrackingUrl());
       appState = appReport.getYarnApplicationState();
+      
     }
 
   }
