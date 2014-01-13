@@ -66,17 +66,23 @@ public class TeknekApplicationMaster {
     
     for (Container container : response.getAllocatedContainers()) {
       ContainerLaunchContext ctx = Records.newRecord(ContainerLaunchContext.class);
+      
+      /*
       ctx.setCommands(Collections.singletonList("$JAVA_HOME/bin/java" + " -cp " + jarPath + " "
               + TeknekYarnStarter.class.getName() + " 1>"
               + ApplicationConstants.LOG_DIR_EXPANSION_VAR + "/stdout" + " 2>"
               + ApplicationConstants.LOG_DIR_EXPANSION_VAR + "/stderr"
-      // " 1> /tmp/am-out 2> /tmp/am-err"
-              ));
+              )); 
+      */
+      ctx.setCommands(Collections.singletonList("/usr/java/jdk1.7.0_45/bin/java -cp file:///tmp/teknek-yarn-0.0.1-SNAPSHOT-jar-with-dependencies.jar io.teknek.yarn.TeknekYarnStarter")); 
+      
+      
       System.out.println(ctx.getCommands());
       System.out.println(container); 
       nmClient.startContainer(container, ctx);
+      System.out.println("after startContainer "); 
     }
-     
+
     Thread.sleep(1000000);
     rmClient.unregisterApplicationMaster(FinalApplicationStatus.SUCCEEDED, "", "");
   }
