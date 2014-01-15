@@ -49,7 +49,7 @@ public class TeknekApplicationMaster {
 
     // Resource requirements for worker containers
     Resource capability = Records.newRecord(Resource.class);
-    capability.setMemory(128);
+    capability.setMemory(4096);
     capability.setVirtualCores(1);
 
     ContainerRequest containerAsk = new ContainerRequest(capability, null, null, priority);
@@ -80,6 +80,8 @@ public class TeknekApplicationMaster {
       System.out.println(ctx.getCommands());
       System.out.println(container); 
       nmClient.startContainer(container, ctx);
+
+      
       System.out.println("after startContainer "); 
     }
 
